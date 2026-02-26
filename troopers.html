@@ -1,0 +1,1113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediaTroopers Command Center</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Google Fonts: MediaTroopers Branding -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Open Sans', sans-serif;
+            background-color: #0f172a; /* slate-900 */
+            color: #e2e8f0; /* slate-200 */
+        }
+        h1, h2, h3, h4, h5, h6, .font-bold, .font-semibold {
+            font-family: 'Poppins', sans-serif;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .fade-in {
+            animation: fadeIn 0.4s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        .toast-enter {
+            animation: slideInRight 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+        
+        /* Modal Animations */
+        #modal-backdrop { transition: opacity 0.3s ease; }
+        #modal-panel { transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease; }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden">
+
+    <!-- Sidebar Navigation -->
+    <aside class="w-64 bg-slate-950 border-r border-slate-800 flex flex-col z-20 shadow-2xl shrink-0 hidden md:flex">
+        <div class="p-6">
+            <!-- Logo Area -->
+            <div class="flex flex-col items-start space-y-2 mb-8">
+                <img src="https://www.media-troopers.com/wp-content/themes/media-troopers/assets/media_logo_white.png" alt="MediaTroopers" class="w-40 img-fluid">
+                <p class="text-[10px] text-blue-400 font-mono tracking-widest uppercase mt-1 pl-1 border-l-2 border-blue-500">Command Center</p>
+            </div>
+
+            <!-- Nav Links -->
+            <div class="space-y-1.5">
+                <button id="btn-overview" onclick="switchTab('overview')" title="View main dashboard overview" class="sidebar-item w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 bg-blue-600/20 text-blue-400 shadow-[0_0_15px_rgba(37,99,235,0.15)] border border-blue-500/30">
+                    <i data-lucide="layout-dashboard" class="w-5 h-5 icon text-blue-400"></i>
+                    <span class="font-medium text-sm">Command Overview</span>
+                </button>
+                <button id="btn-campaigns" onclick="switchTab('campaigns')" title="Active Campaign Tracking" class="sidebar-item w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 text-slate-400 border border-transparent hover:bg-slate-800/50 hover:text-slate-200">
+                    <i data-lucide="target" class="w-5 h-5 icon text-slate-500"></i>
+                    <span class="font-medium text-sm">Active Campaigns</span>
+                </button>
+                <button id="btn-financials" onclick="switchTab('financials')" title="Analyze Cost Per Acquisition vs Revenue Share metrics" class="sidebar-item w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 text-slate-400 border border-transparent hover:bg-slate-800/50 hover:text-slate-200">
+                    <i data-lucide="pie-chart" class="w-5 h-5 icon text-slate-500"></i>
+                    <span class="font-medium text-sm"><abbr title="Cost Per Acquisition" class="no-underline cursor-help">CPA</abbr> / Rev-Share Engine</span>
+                </button>
+                <button id="btn-acquisition" onclick="switchTab('acquisition')" title="MediaCruiser Acquisition" class="sidebar-item w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 text-slate-400 border border-transparent hover:bg-slate-800/50 hover:text-slate-200">
+                    <i data-lucide="trending-up" class="w-5 h-5 icon text-slate-500"></i>
+                    <span class="font-medium text-sm">MediaCruiser <abbr title="Acquisition" class="no-underline cursor-help">Acq.</abbr></span>
+                </button>
+                <button id="btn-compliance" onclick="switchTab('compliance')" title="Compliance Tracking" class="sidebar-item w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 text-slate-400 border border-transparent hover:bg-slate-800/50 hover:text-slate-200">
+                    <i data-lucide="shield-alert" class="w-5 h-5 icon text-slate-500"></i>
+                    <span class="font-medium text-sm">Compliance Moat</span>
+                </button>
+                <button id="btn-team" onclick="openModal('team_directory')" title="SCCG Partners" class="sidebar-item w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 text-slate-400 border border-transparent hover:bg-slate-800/50 hover:text-slate-200">
+                    <i data-lucide="users" class="w-5 h-5 icon text-slate-500"></i>
+                    <span class="font-medium text-sm">Partners (<abbr title="SCCG Management" class="no-underline cursor-help">SCCG</abbr>)</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- User Profile -->
+        <div class="mt-auto p-6">
+            <div class="bg-slate-900 rounded-lg p-4 border border-slate-800 shadow-lg" title="User Profile">
+                <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-sm font-bold text-white cursor-help shadow-inner" title="Team Lead">
+                        TL
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-white">Team Lead</p>
+                        <p class="text-xs text-emerald-400 flex items-center mt-0.5">
+                            <span class="w-2 h-2 rounded-full bg-emerald-400 mr-1.5 animate-pulse"></span> Online
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 flex flex-col relative overflow-hidden bg-slate-900">
+        
+        <!-- Top Header -->
+        <header class="h-20 border-b border-slate-800 bg-slate-950/90 backdrop-blur-md px-4 md:px-8 flex items-center justify-between z-10 sticky top-0 shrink-0">
+            <button onclick="toggleMobileMenu()" class="md:hidden text-slate-400 mr-4 hover:text-white" title="Open navigation menu">
+                <i data-lucide="menu"></i>
+            </button>
+
+            <!-- Search -->
+            <div class="flex items-center space-x-4 flex-1">
+                <div class="relative group hidden sm:block">
+                    <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4"></i>
+                    <input type="text" onkeyup="filterCampaigns(this.value)" title="Search for campaigns, partners, or jurisdictions" placeholder="Search campaigns..." class="pl-9 pr-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all w-48 md:w-64 text-slate-200 placeholder-slate-500">
+                </div>
+            </div>
+
+            <!-- Filters & Notifications -->
+            <div class="flex items-center space-x-2 md:space-x-4">
+                <!-- Geo Dropdown -->
+                <div class="relative hidden md:block">
+                    <button onclick="toggleDropdown('geo-menu')" title="Filter dashboard by geographic jurisdiction" class="flex items-center space-x-2 px-3 py-1.5 bg-slate-800/50 border border-slate-700 rounded-lg text-sm text-slate-200 hover:bg-slate-800 cursor-pointer transition-colors shadow-sm">
+                        <i data-lucide="map-pin" class="text-blue-400 w-4 h-4"></i>
+                        <span id="geo-selected">All US Jurisdictions</span>
+                        <i data-lucide="filter" class="ml-2 text-slate-400 w-3 h-3"></i>
+                    </button>
+                    <div id="geo-menu" class="dropdown-menu hidden absolute right-0 mt-2 w-56 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-50 max-h-64 overflow-y-auto scrollbar-hide">
+                        <a href="#" onclick="selectFilter('geo', 'All US Jurisdictions'); return false;" class="block px-4 py-2 text-sm text-slate-200 font-bold hover:bg-blue-600/20 transition-colors">All US Jurisdictions</a>
+                        <div class="border-t border-slate-700 my-1"></div>
+                        <a href="#" onclick="selectFilter('geo', 'Arizona (AZ)'); return false;" class="block px-4 py-2 text-sm text-slate-300 hover:bg-blue-600/20 transition-colors">Arizona (AZ)</a>
+                        <a href="#" onclick="selectFilter('geo', 'Colorado (CO)'); return false;" class="block px-4 py-2 text-sm text-slate-300 hover:bg-blue-600/20 transition-colors">Colorado (CO)</a>
+                        <a href="#" onclick="selectFilter('geo', 'Connecticut (CT)'); return false;" class="block px-4 py-2 text-sm text-slate-300 hover:bg-blue-600/20 transition-colors">Connecticut (CT)</a>
+                        <a href="#" onclick="selectFilter('geo', 'Delaware (DE)'); return false;" class="block px-4 py-2 text-sm text-slate-300 hover:bg-blue-600/20 transition-colors">Delaware (DE)</a>
+                        <a href="#" onclick="selectFilter('geo', 'District of Columbia (DC)'); return false;" class="block px-4 py-2 text-sm text-slate-300 hover:bg-blue-600/20 transition-colors">District of Columbia (DC)</a>
+                        <a href="#" onclick="selectFilter('geo', 'Illinois (IL)'); return false;" class="block px-4 py-2 text-sm text-slate-300 hover:bg-blue-600/20 transition-colors">Illinois (IL)</a>
+                        <a href="#" onclick="selectFilter('geo', 'Indiana (IN)'); return false;" class="block px-4 py-2 text-sm text-slate-300 hover:bg-blue-600/20 transition-colors">Indiana (IN)</a>
+                        <a href="#" onclick="selectFilter('geo', 'Iowa (IA)'); return false;" class="block px-4 py-2 text-sm text-slate-300 hover:bg-blue-600/20 transition-colors">Iowa (IA)</a>
+                        <a href="#" onclick="selectFilter('geo', 'Kansas (KS)'); return false;" class="block px-4 py-2 text-sm text-slate-300 hover:bg-blue-600/20 transition-colors">Kansas (KS)</a>
+                        <a href="#" onclick="selectFilter('geo', 'Kentucky (KY)'); return false;" class="block px-4 py-2 text-sm text-slate-300 hover:bg-blue-600/20 transition-colors">Kentucky (KY)</a>
+                        <a href="#" onclick="selectFilter('geo', 'Louisiana (LA)'); return false;" class="block px-4 py-2 text-sm text-slate-300 hover:bg-blue-600/20 transition-colors">Louisiana (LA)</a>
+                        <a href="#" onclick="selectFilter('geo', 'Maryland (MD)'); return false;" class="block px-4 py-2 text-sm text-slate-300 hover:bg-blue-600/20 transition-colors">Maryland (MD)</a>
+                        <a href="#" onclick="selectFilter('geo', 'Massachusetts (MA)'); return false;" class="block px-4 py-2 text-sm text-slate-300 hover:bg-blue-600/20 transition-colors">Massachusetts (MA)</a>
+                        <a href="#" onclick="selectFilter('geo', 'Michigan (MI)'); return false;" class="block px-4 py-2 text-sm text-slate-300 hover:bg-blue-600/20 transition-colors">Michigan (MI)</a>
+                        <a href="#" onclick="selectFilter('geo', 'Mississippi (MS)'); return false;" class="block px-4 py-2 text-sm text-slate-300 hover:bg-blue-600/20 transition-colors">Mississippi (MS)</a>
+                        <a href="#" onclick="selectFilter('geo', 'Nevada (NV)'); return false;" class="block px-4 py-2 text-sm text-slate-300 hover:bg-blue-600/20 transition-colors">Nevada (NV)</a>
+                        <a href="#" onclick="selectFilter('geo', 'New Hampshire (NH)'); return false;" class="block px-4 py-2 text-sm text-slate-300 hover:bg-blue-600/20 transition-colors">New Hampshire (NH)</a>
+                        <a href="#" onclick="selectFilter('geo', 'New Jersey (NJ)'); return false;" class="block px-4 py-2 text-sm text-slate-300 hover:bg-blue-600/20 transition-colors">New Jersey (NJ)</a>
+                        <a href="#" onclick="selectFilter('geo', 'New York (NY)'); return false;" class="block px-4 py-2 text-sm text-slate-300 hover:bg-blue-600/20 transition-colors">New York (NY)</a>
+                        <a href="#" onclick="selectFilter('geo', 'North Carolina (NC)'); return false;" class="block px-4 py-2 text-sm text-slate-300 hover:bg-blue-600/20 transition-colors">North Carolina (NC)</a>
+                        <a href="#" onclick="selectFilter('geo', 'Ohio (OH)'); return false;" class="block px-4 py-2 text-sm text-slate-300 hover:bg-blue-600/20 transition-colors">Ohio (OH)</a>
+                        <a href="#" onclick="selectFilter('geo', 'Pennsylvania (PA)'); return false;" class="block px-4 py-2 text-sm text-slate-300 hover:bg-blue-600/20 transition-colors">Pennsylvania (PA)</a>
+                        <a href="#" onclick="selectFilter('geo', 'Rhode Island (RI)'); return false;" class="block px-4 py-2 text-sm text-slate-300 hover:bg-blue-600/20 transition-colors">Rhode Island (RI)</a>
+                        <a href="#" onclick="selectFilter('geo', 'Tennessee (TN)'); return false;" class="block px-4 py-2 text-sm text-slate-300 hover:bg-blue-600/20 transition-colors">Tennessee (TN)</a>
+                        <a href="#" onclick="selectFilter('geo', 'Vermont (VT)'); return false;" class="block px-4 py-2 text-sm text-slate-300 hover:bg-blue-600/20 transition-colors">Vermont (VT)</a>
+                        <a href="#" onclick="selectFilter('geo', 'Virginia (VA)'); return false;" class="block px-4 py-2 text-sm text-slate-300 hover:bg-blue-600/20 transition-colors">Virginia (VA)</a>
+                        <a href="#" onclick="selectFilter('geo', 'Washington (WA)'); return false;" class="block px-4 py-2 text-sm text-slate-300 hover:bg-blue-600/20 transition-colors">Washington (WA)</a>
+                        <a href="#" onclick="selectFilter('geo', 'West Virginia (WV)'); return false;" class="block px-4 py-2 text-sm text-slate-300 hover:bg-blue-600/20 transition-colors">West Virginia (WV)</a>
+                        <a href="#" onclick="selectFilter('geo', 'Wyoming (WY)'); return false;" class="block px-4 py-2 text-sm text-slate-300 hover:bg-blue-600/20 transition-colors">Wyoming (WY)</a>
+                    </div>
+                </div>
+                
+                <!-- Date Dropdown -->
+                <div class="relative">
+                    <button onclick="toggleDropdown('date-menu')" title="Filter dashboard by date range" class="flex items-center space-x-2 px-3 py-1.5 bg-slate-800/50 border border-slate-700 rounded-lg text-sm text-slate-200 hover:bg-slate-800 cursor-pointer transition-colors shadow-sm">
+                        <i data-lucide="calendar" class="text-blue-400 w-4 h-4"></i>
+                        <span id="date-selected" class="hidden sm:inline">Last 30 Days</span>
+                    </button>
+                    <div id="date-menu" class="dropdown-menu hidden absolute right-0 mt-2 w-40 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-50 overflow-hidden">
+                        <a href="#" onclick="selectFilter('date', 'Today'); return false;" class="block px-4 py-2 text-sm text-slate-200 hover:bg-blue-600/20 transition-colors">Today</a>
+                        <a href="#" onclick="selectFilter('date', 'Last 7 Days'); return false;" class="block px-4 py-2 text-sm text-slate-200 hover:bg-blue-600/20 transition-colors">Last 7 Days</a>
+                        <a href="#" onclick="selectFilter('date', 'Last 30 Days'); return false;" class="block px-4 py-2 text-sm text-slate-200 hover:bg-blue-600/20 transition-colors">Last 30 Days</a>
+                        <a href="#" onclick="selectFilter('date', 'Year to Date'); return false;" class="block px-4 py-2 text-sm text-slate-200 hover:bg-blue-600/20 transition-colors">Year to Date</a>
+                    </div>
+                </div>
+
+                <!-- Notifications Dropdown -->
+                <div class="relative">
+                    <button onclick="toggleDropdown('notif-menu')" title="View 2 unread notifications" class="relative p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors">
+                        <i data-lucide="bell" class="w-5 h-5"></i>
+                        <span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500 border-2 border-slate-950"></span>
+                    </button>
+                    <div id="notif-menu" class="dropdown-menu hidden absolute right-0 mt-2 w-72 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-50 overflow-hidden">
+                        <div class="px-4 py-3 border-b border-slate-700 bg-slate-900/50">
+                            <p class="text-sm font-semibold text-white">Action Center</p>
+                        </div>
+                        <div class="max-h-64 overflow-y-auto">
+                            <a href="#" onclick="openModal('alert_geo'); closeAllDropdowns(); return false;" class="block px-4 py-3 border-b border-slate-700 hover:bg-slate-700/50 transition-colors bg-red-900/20 border-l-4 border-l-red-500">
+                                <p class="text-xs font-bold text-red-400 mb-1">Compliance Alert</p>
+                                <p class="text-sm text-slate-200">Geo-Fence Bleed Detected in NY/NJ area.</p>
+                            </a>
+                            <a href="#" onclick="openModal('alert_creative'); closeAllDropdowns(); return false;" class="block px-4 py-3 hover:bg-slate-700/50 transition-colors bg-amber-900/20 border-l-4 border-l-amber-500">
+                                <p class="text-xs font-bold text-amber-400 mb-1">Creative Update Required</p>
+                                <p class="text-sm text-slate-200">Ohio updated responsible gaming formatting.</p>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Dashboard Canvas (Scrollable) -->
+        <div class="flex-1 overflow-auto p-4 md:p-8 scrollbar-hide">
+            <div class="max-w-7xl mx-auto pb-10">
+
+                <!-- ============================== -->
+                <!-- MODULE 1: COMMAND OVERVIEW     -->
+                <!-- ============================== -->
+                <div id="overview-module" class="module-content fade-in space-y-6">
+                    
+                    <!-- 4 Top KPI Cards -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div onclick="openModal('kpi_cac')" class="p-5 rounded-xl border bg-slate-800/40 border-slate-700/50 relative overflow-hidden cursor-pointer hover:border-slate-500 transition-colors shadow-lg group">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1 group-hover:text-white transition-colors">Blended <abbr title="Customer Acquisition Cost" class="cursor-help decoration-slate-400 decoration-dotted underline underline-offset-2">CAC</abbr></p>
+                                    <h3 class="text-2xl font-bold text-white mb-2">$245.50</h3>
+                                </div>
+                                <div class="p-2 rounded-lg bg-slate-900 text-slate-400 group-hover:bg-blue-600/20 group-hover:text-blue-400 transition-colors">
+                                    <i data-lucide="crosshair" class="w-5 h-5"></i>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span class="flex items-center text-sm font-medium text-emerald-400">
+                                    <i data-lucide="arrow-up-right" class="w-4 h-4 mr-1"></i> -12.4%
+                                </span>
+                                <span class="text-slate-400 text-xs">vs last 30 days</span>
+                            </div>
+                        </div>
+
+                        <div onclick="openModal('kpi_ftd')" class="p-5 rounded-xl border bg-slate-800/40 border-slate-700/50 relative overflow-hidden cursor-pointer hover:border-slate-500 transition-colors shadow-lg group">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1 group-hover:text-white transition-colors">Total <abbr title="First Time Depositors" class="cursor-help decoration-slate-400 decoration-dotted underline underline-offset-2">FTDs</abbr> (Month)</p>
+                                    <h3 class="text-2xl font-bold text-white mb-2">3,492</h3>
+                                </div>
+                                <div class="p-2 rounded-lg bg-slate-900 text-slate-400 group-hover:bg-blue-600/20 group-hover:text-blue-400 transition-colors">
+                                    <i data-lucide="users" class="w-5 h-5"></i>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span class="flex items-center text-sm font-medium text-emerald-400">
+                                    <i data-lucide="arrow-up-right" class="w-4 h-4 mr-1"></i> +8.2%
+                                </span>
+                                <span class="text-slate-400 text-xs">vs last 30 days</span>
+                            </div>
+                        </div>
+
+                        <div onclick="switchTab('financials')" class="p-5 rounded-xl border bg-slate-800/40 border-slate-700/50 relative overflow-hidden cursor-pointer hover:border-slate-500 transition-colors shadow-lg group">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1 group-hover:text-white transition-colors"><abbr title="Revenue Share" class="cursor-help decoration-slate-400 decoration-dotted underline underline-offset-2">Rev-Share</abbr> Shift</p>
+                                    <h3 class="text-2xl font-bold text-white mb-2">42%</h3>
+                                </div>
+                                <div class="p-2 rounded-lg bg-slate-900 text-slate-400 group-hover:bg-blue-600/20 group-hover:text-blue-400 transition-colors">
+                                    <i data-lucide="pie-chart" class="w-5 h-5"></i>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span class="flex items-center text-sm font-medium text-emerald-400">
+                                    <i data-lucide="arrow-up-right" class="w-4 h-4 mr-1"></i> +5.1%
+                                </span>
+                                <span class="text-slate-400 text-xs">vs last 30 days</span>
+                            </div>
+                        </div>
+
+                        <div onclick="switchTab('compliance')" class="p-5 rounded-xl border bg-slate-800/40 border-slate-700/50 relative overflow-hidden cursor-pointer hover:border-red-500 transition-colors shadow-[0_0_15px_rgba(239,68,68,0.05)] group">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1 group-hover:text-white transition-colors">Compliance Alerts</p>
+                                    <h3 class="text-2xl font-bold text-white mb-2">2 Active</h3>
+                                </div>
+                                <div class="p-2 rounded-lg bg-red-500/10 text-red-400 group-hover:bg-red-500/20 group-hover:text-red-300 transition-colors">
+                                    <i data-lucide="shield-alert" class="w-5 h-5"></i>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span class="flex items-center text-sm font-medium text-red-400">
+                                    <i data-lucide="arrow-down-right" class="w-4 h-4 mr-1"></i> +2
+                                </span>
+                                <span class="text-slate-400 text-xs">require action</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <!-- MediaCruiser Quick Look -->
+                        <div class="lg:col-span-2 bg-slate-800/40 border border-slate-700/50 rounded-xl p-5 shadow-lg">
+                            <div class="flex justify-between items-center mb-6">
+                                <h3 class="text-lg font-semibold text-white flex items-center">
+                                    <i data-lucide="activity" class="text-blue-400 w-5 h-5 mr-2"></i>
+                                    MediaCruiser Pulse
+                                </h3>
+                                <button onclick="switchTab('campaigns')" class="text-xs font-semibold text-slate-400 hover:text-white transition-colors p-2 rounded hover:bg-slate-700/50">View All Campaigns &rarr;</button>
+                            </div>
+                            <div class="space-y-4" id="pulse-list">
+                                <div onclick="openModal('camp_betmgm')" class="pulse-item flex items-center justify-between p-4 bg-slate-900/50 rounded-lg border border-slate-700/50 hover:border-blue-500/50 cursor-pointer transition-all hover:shadow-md">
+                                    <div>
+                                        <p class="text-sm font-semibold text-white">BetMGM - NFL Kickoff (NJ)</p>
+                                        <div class="flex space-x-4 mt-1.5 text-xs text-slate-400">
+                                            <span>Spend: <span class="text-white font-medium">$45,200</span></span>
+                                            <span>FTDs: <span class="text-white font-medium">840</span></span>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-sm font-bold text-emerald-400">210% ROAS</p>
+                                        <p class="text-xs mt-1 text-slate-400">Active • Scaling</p>
+                                    </div>
+                                </div>
+                                <div onclick="openModal('camp_draftkings')" class="pulse-item flex items-center justify-between p-4 bg-slate-900/50 rounded-lg border border-slate-700/50 hover:border-blue-500/50 cursor-pointer transition-all hover:shadow-md">
+                                    <div>
+                                        <p class="text-sm font-semibold text-white">DraftKings - NBA Finals (PA)</p>
+                                        <div class="flex space-x-4 mt-1.5 text-xs text-slate-400">
+                                            <span>Spend: <span class="text-white font-medium">$32,100</span></span>
+                                            <span>FTDs: <span class="text-white font-medium">520</span></span>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-sm font-bold text-emerald-400">185% ROAS</p>
+                                        <p class="text-xs mt-1 text-slate-400">Active • Stable</p>
+                                    </div>
+                                </div>
+                                <div onclick="openModal('camp_fanduel')" class="pulse-item flex items-center justify-between p-4 bg-slate-900/50 rounded-lg border border-slate-700/50 border-l-4 border-l-red-500 hover:border-red-500/50 cursor-pointer transition-all hover:shadow-md">
+                                    <div>
+                                        <p class="text-sm font-semibold text-white">FanDuel - Generic Casino (MI)</p>
+                                        <div class="flex space-x-4 mt-1.5 text-xs text-slate-400">
+                                            <span>Spend: <span class="text-white font-medium">$18,400</span></span>
+                                            <span>FTDs: <span class="text-white font-medium">290</span></span>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-sm font-bold text-amber-400">140% ROAS</p>
+                                        <p class="text-xs mt-1 text-red-400 font-semibold">Warning - High CAC</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Mini Compliance Overview -->
+                        <div class="bg-slate-800/40 border border-slate-700/50 rounded-xl p-5 shadow-lg flex flex-col">
+                            <h3 class="text-lg font-semibold text-white flex items-center mb-6">
+                                <i data-lucide="shield-check" class="text-emerald-400 w-5 h-5 mr-2"></i>
+                                Moat Status
+                            </h3>
+                            <div class="space-y-4 flex-1">
+                                <div class="p-4 bg-slate-900/50 border border-slate-700/50 rounded-lg text-center h-full flex flex-col justify-center">
+                                    <p class="text-3xl font-bold text-white mb-2">13</p>
+                                    <p class="text-sm text-slate-400 font-medium uppercase tracking-widest">Active Supplier Licenses</p>
+                                    <div class="mt-4 pt-4 border-t border-slate-700/50 w-full">
+                                        <button onclick="switchTab('compliance')" class="text-sm text-blue-400 hover:text-white transition-colors font-semibold">Open Full Matrix &rarr;</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ============================== -->
+                <!-- MODULE 2: ACTIVE CAMPAIGNS     -->
+                <!-- ============================== -->
+                <div id="campaigns-module" class="module-content hidden fade-in space-y-6">
+                    <div class="flex justify-between items-end mb-6">
+                        <div>
+                            <h2 class="text-2xl font-bold text-white">Active Campaigns Tracker</h2>
+                            <p class="text-slate-400 text-sm mt-1">Live monitoring of targeted platforms, geo-bleeding status, and current vs. target CAC.</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-800/40 border border-slate-700/50 rounded-xl shadow-lg overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm whitespace-nowrap">
+                                <thead class="text-xs text-slate-400 uppercase bg-slate-900/80">
+                                    <tr>
+                                        <th class="px-6 py-4 font-semibold">Campaign Name</th>
+                                        <th class="px-6 py-4 font-semibold">Website / App Target</th>
+                                        <th class="px-6 py-4 font-semibold">Geo-Bleed (CPP)</th>
+                                        <th class="px-6 py-4 font-semibold">CAC (Cur / Tgt)</th>
+                                        <th class="px-6 py-4 font-semibold">ROAS</th>
+                                        <th class="px-6 py-4 font-semibold text-right">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-700/50" id="campaign-list">
+                                    <tr class="campaign-item hover:bg-slate-900/30 transition-colors cursor-pointer" onclick="openModal('camp_betmgm')">
+                                        <td class="px-6 py-4 font-bold text-white flex items-center">
+                                            <div class="w-2 h-2 rounded-full bg-emerald-500 mr-2"></div>
+                                            BetMGM - NFL Kickoff (NJ)
+                                        </td>
+                                        <td class="px-6 py-4 text-slate-300">NJ Local Sports News Network</td>
+                                        <td class="px-6 py-4 text-emerald-400 font-medium">None</td>
+                                        <td class="px-6 py-4 text-slate-300"><span class="text-white font-bold">$185</span> / $350</td>
+                                        <td class="px-6 py-4 font-bold text-emerald-400">210%</td>
+                                        <td class="px-6 py-4 text-right"><button class="text-blue-400 hover:text-blue-300 text-xs font-semibold">Edit &rarr;</button></td>
+                                    </tr>
+                                    <tr class="campaign-item hover:bg-slate-900/30 transition-colors cursor-pointer" onclick="openModal('camp_draftkings')">
+                                        <td class="px-6 py-4 font-bold text-white flex items-center">
+                                            <div class="w-2 h-2 rounded-full bg-emerald-500 mr-2"></div>
+                                            DraftKings - NBA Finals (PA)
+                                        </td>
+                                        <td class="px-6 py-4 text-slate-300">DraftKings iOS App Retargeting</td>
+                                        <td class="px-6 py-4 text-emerald-400 font-medium">None</td>
+                                        <td class="px-6 py-4 text-slate-300"><span class="text-white font-bold">$210</span> / $280</td>
+                                        <td class="px-6 py-4 font-bold text-emerald-400">185%</td>
+                                        <td class="px-6 py-4 text-right"><button class="text-blue-400 hover:text-blue-300 text-xs font-semibold">Edit &rarr;</button></td>
+                                    </tr>
+                                    <tr class="campaign-item bg-amber-500/5 hover:bg-amber-500/10 transition-colors cursor-pointer" onclick="openModal('camp_caesars')">
+                                        <td class="px-6 py-4 font-bold text-white flex items-center">
+                                            <div class="w-2 h-2 rounded-full bg-amber-500 mr-2"></div>
+                                            Caesars - March Madness (NY)
+                                        </td>
+                                        <td class="px-6 py-4 text-slate-300">National Sports Blogs (NY Geo)</td>
+                                        <td class="px-6 py-4 text-amber-400 font-medium"><i data-lucide="alert-triangle" class="w-3 h-3 inline mr-1"></i>Minor (NJ/CT)</td>
+                                        <td class="px-6 py-4 text-slate-300"><span class="text-white font-bold">$305</span> / $300</td>
+                                        <td class="px-6 py-4 font-bold text-amber-400">110%</td>
+                                        <td class="px-6 py-4 text-right"><button class="text-blue-400 hover:text-blue-300 text-xs font-semibold">Edit &rarr;</button></td>
+                                    </tr>
+                                    <tr class="campaign-item bg-red-500/5 hover:bg-red-500/10 transition-colors cursor-pointer" onclick="openModal('camp_fanduel')">
+                                        <td class="px-6 py-4 font-bold text-white flex items-center">
+                                            <div class="w-2 h-2 rounded-full bg-red-500 mr-2 animate-pulse"></div>
+                                            FanDuel - Generic Casino (MI)
+                                        </td>
+                                        <td class="px-6 py-4 text-slate-300">Programmatic Display Network</td>
+                                        <td class="px-6 py-4 text-red-400 font-medium"><i data-lucide="alert-octagon" class="w-3 h-3 inline mr-1"></i>High (CPP Anomaly)</td>
+                                        <td class="px-6 py-4 text-slate-300"><span class="text-red-400 font-bold">$420</span> / $250</td>
+                                        <td class="px-6 py-4 font-bold text-red-400">85%</td>
+                                        <td class="px-6 py-4 text-right"><button class="text-red-400 hover:text-red-300 text-xs font-semibold">Pause &rarr;</button></td>
+                                    </tr>
+                                    <tr class="campaign-item hover:bg-slate-900/30 transition-colors cursor-pointer" onclick="openModal('camp_bet365')">
+                                        <td class="px-6 py-4 font-bold text-white flex items-center">
+                                            <div class="w-2 h-2 rounded-full bg-emerald-500 mr-2"></div>
+                                            bet365 - Global Soccer (CO)
+                                        </td>
+                                        <td class="px-6 py-4 text-slate-300">LiveScore App In-stream</td>
+                                        <td class="px-6 py-4 text-emerald-400 font-medium">None</td>
+                                        <td class="px-6 py-4 text-slate-300"><span class="text-white font-bold">$120</span> / $200</td>
+                                        <td class="px-6 py-4 font-bold text-emerald-400">240%</td>
+                                        <td class="px-6 py-4 text-right"><button class="text-blue-400 hover:text-blue-300 text-xs font-semibold">Edit &rarr;</button></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ============================== -->
+                <!-- MODULE 3: FINANCIALS           -->
+                <!-- ============================== -->
+                <div id="financials-module" class="module-content hidden fade-in space-y-6">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-6 gap-4">
+                        <div>
+                            <h2 class="text-2xl font-bold text-white">The CPA vs. Rev-Share Engine</h2>
+                            <p class="text-slate-400 text-sm mt-1">Tracking the macro-shift towards compounding mutual-liability retention.</p>
+                        </div>
+                        
+                        <div class="relative inline-block text-left">
+                            <button onclick="toggleDropdown('export-menu')" class="flex items-center px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 shadow-[0_0_10px_rgba(37,99,235,0.3)] transition-all font-medium border border-transparent hover:border-blue-500">
+                                <i data-lucide="download" class="w-4 h-4 mr-2"></i>
+                                Export Report
+                                <i data-lucide="chevron-down" class="ml-2 w-4 h-4"></i>
+                            </button>
+                            <div id="export-menu" class="dropdown-menu hidden absolute right-0 mt-2 w-48 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-50 overflow-hidden">
+                                <button onclick="showToast('Generating Excel (.xlsx) file...'); closeAllDropdowns();" class="w-full text-left px-4 py-2.5 text-sm text-slate-200 hover:bg-slate-700 transition-colors flex items-center"><i data-lucide="table" class="w-4 h-4 mr-3 text-emerald-400"></i> Excel (.xlsx)</button>
+                                <button onclick="showToast('Downloading Raw Data (CSV)...'); closeAllDropdowns();" class="w-full text-left px-4 py-2.5 text-sm text-slate-200 hover:bg-slate-700 transition-colors flex items-center"><i data-lucide="file-text" class="w-4 h-4 mr-3 text-slate-400"></i> Data CSV</button>
+                                <button onclick="copyToClipboard(); closeAllDropdowns();" class="w-full text-left px-4 py-2.5 text-sm text-slate-200 hover:bg-slate-700 transition-colors flex items-center"><i data-lucide="link" class="w-4 h-4 mr-3 text-blue-400"></i> Copy Share Link</button>
+                                <div class="border-t border-slate-700 my-1"></div>
+                                <button onclick="window.print(); closeAllDropdowns();" class="w-full text-left px-4 py-2.5 text-sm text-slate-200 hover:bg-slate-700 transition-colors flex items-center"><i data-lucide="printer" class="w-4 h-4 mr-3 text-slate-400"></i> Print View</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div onclick="openModal('fin_revsplit')" class="bg-slate-800/40 border border-slate-700/50 rounded-xl p-5 flex flex-col justify-center items-center relative overflow-hidden cursor-pointer hover:border-blue-500/50 transition-colors shadow-lg group">
+                            <h3 class="text-sm font-semibold text-slate-400 absolute top-5 left-5 w-full group-hover:text-white transition-colors">Revenue Source Shift</h3>
+                            
+                            <div class="relative w-48 h-48 mt-12 mb-6 transition-transform duration-300 group-hover:scale-105">
+                                <div class="w-full h-full rounded-full border-[16px] border-slate-900 border-t-emerald-400 border-r-emerald-400 rotate-45 transition-all duration-1000"></div>
+                                <div class="absolute inset-0 flex flex-col items-center justify-center -rotate-45">
+                                    <span class="text-4xl font-bold text-white">42%</span>
+                                    <span class="text-xs text-emerald-400 font-semibold uppercase tracking-wider mt-1">Rev-Share</span>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-auto w-full space-y-3">
+                                <div class="flex justify-between items-center text-sm p-2 rounded bg-slate-900/50 border border-slate-700/30">
+                                    <div class="flex items-center">
+                                        <div class="w-3 h-3 rounded-full bg-slate-500 mr-3"></div>
+                                        <span class="text-white font-medium">Pure CPA Base</span>
+                                    </div>
+                                    <span class="text-white font-bold">58% <span class="text-slate-500 font-normal text-xs ml-1">($1.2M)</span></span>
+                                </div>
+                                <div class="flex justify-between items-center text-sm p-2 rounded bg-slate-900/50 border border-slate-700/30">
+                                    <div class="flex items-center">
+                                        <div class="w-3 h-3 rounded-full bg-emerald-400 mr-3 shadow-[0_0_10px_rgba(52,211,153,0.5)]"></div>
+                                        <span class="text-white font-medium">Rev-Share (Compounding)</span>
+                                    </div>
+                                    <span class="text-emerald-400 font-bold">42% <span class="text-slate-500 font-normal text-xs ml-1">($840k)</span></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="lg:col-span-2 bg-slate-800/40 border border-slate-700/50 rounded-xl p-6 flex flex-col shadow-lg overflow-y-auto max-h-[450px] scrollbar-hide">
+                            <h3 class="text-sm font-semibold text-slate-400 mb-6 sticky top-0 bg-slate-800/90 backdrop-blur pb-2 z-10">Net Gaming Revenue (NGR) & Projected LTV by Key Partners</h3>
+                            
+                            <div class="space-y-6 flex-1">
+                                <!-- BetMGM -->
+                                <div onclick="openModal('fin_betmgm')" class="cursor-pointer group">
+                                    <div class="flex justify-between text-sm mb-2">
+                                        <span class="font-bold text-white text-base flex items-center group-hover:text-blue-400 transition-colors">
+                                            BetMGM 
+                                            <span class="text-slate-500 font-normal text-xs ml-3 bg-slate-900 border border-slate-700 px-2 py-1 rounded hidden sm:inline">6-Mo Cohort Projection</span>
+                                        </span>
+                                        <span class="text-emerald-400 font-semibold bg-emerald-500/10 px-2 py-1 rounded border border-emerald-500/20 text-xs">+15% NGR Growth</span>
+                                    </div>
+                                    <div class="flex h-8 w-full bg-slate-900 rounded-lg overflow-hidden border border-slate-700/50 group-hover:border-blue-500/50 transition-colors">
+                                        <div class="bg-blue-600/80 w-[30%] flex items-center justify-center text-[10px] font-bold text-white border-r border-slate-900">Acquisition Cost</div>
+                                        <div class="bg-slate-600 w-[20%] flex items-center justify-center text-[10px] font-bold text-white border-r border-slate-900">Breakeven</div>
+                                        <div class="bg-gradient-to-r from-emerald-500 to-emerald-400 w-[50%] flex items-center justify-center text-[10px] font-bold text-slate-900">Compounding Rev-Share Profit</div>
+                                    </div>
+                                    <div class="flex justify-between text-xs font-medium text-slate-500 mt-1 px-1">
+                                        <span>Month 1</span>
+                                        <span>Month 3</span>
+                                        <span class="text-emerald-400/80">Est LTV: $1,450/player</span>
+                                    </div>
+                                </div>
+
+                                <!-- DraftKings -->
+                                <div onclick="openModal('fin_dk')" class="cursor-pointer group">
+                                    <div class="flex justify-between text-sm mb-2">
+                                        <span class="font-bold text-white text-base flex items-center group-hover:text-blue-400 transition-colors">
+                                            DraftKings 
+                                            <span class="text-slate-500 font-normal text-xs ml-3 bg-slate-900 border border-slate-700 px-2 py-1 rounded hidden sm:inline">6-Mo Cohort Projection</span>
+                                        </span>
+                                        <span class="text-emerald-400 font-semibold bg-emerald-500/10 px-2 py-1 rounded border border-emerald-500/20 text-xs">+9% NGR Growth</span>
+                                    </div>
+                                    <div class="flex h-8 w-full bg-slate-900 rounded-lg overflow-hidden border border-slate-700/50 group-hover:border-blue-500/50 transition-colors">
+                                        <div class="bg-blue-600/80 w-[35%] flex items-center justify-center text-[10px] font-bold text-white border-r border-slate-900">Acquisition Cost</div>
+                                        <div class="bg-slate-600 w-[25%] flex items-center justify-center text-[10px] font-bold text-white border-r border-slate-900">Breakeven</div>
+                                        <div class="bg-gradient-to-r from-emerald-500 to-emerald-400 w-[40%] flex items-center justify-center text-[10px] font-bold text-slate-900">Compounding Profit</div>
+                                    </div>
+                                    <div class="flex justify-between text-xs font-medium text-slate-500 mt-1 px-1">
+                                        <span>Month 1</span>
+                                        <span>Month 4</span>
+                                        <span class="text-emerald-400/80">Est LTV: $1,120/player</span>
+                                    </div>
+                                </div>
+
+                                <!-- FanDuel -->
+                                <div onclick="openModal('fin_fanduel')" class="cursor-pointer group">
+                                    <div class="flex justify-between text-sm mb-2">
+                                        <span class="font-bold text-white text-base flex items-center group-hover:text-blue-400 transition-colors">
+                                            FanDuel 
+                                            <span class="text-slate-500 font-normal text-xs ml-3 bg-slate-900 border border-slate-700 px-2 py-1 rounded hidden sm:inline">6-Mo Cohort Projection</span>
+                                        </span>
+                                        <span class="text-emerald-400 font-semibold bg-emerald-500/10 px-2 py-1 rounded border border-emerald-500/20 text-xs">+12% NGR Growth</span>
+                                    </div>
+                                    <div class="flex h-8 w-full bg-slate-900 rounded-lg overflow-hidden border border-slate-700/50 group-hover:border-blue-500/50 transition-colors">
+                                        <div class="bg-blue-600/80 w-[40%] flex items-center justify-center text-[10px] font-bold text-white border-r border-slate-900">Acquisition Cost</div>
+                                        <div class="bg-slate-600 w-[15%] flex items-center justify-center text-[10px] font-bold text-white border-r border-slate-900">Breakeven</div>
+                                        <div class="bg-gradient-to-r from-emerald-500 to-emerald-400 w-[45%] flex items-center justify-center text-[10px] font-bold text-slate-900">Compounding Profit</div>
+                                    </div>
+                                    <div class="flex justify-between text-xs font-medium text-slate-500 mt-1 px-1">
+                                        <span>Month 1</span>
+                                        <span>Month 4</span>
+                                        <span class="text-emerald-400/80">Est LTV: $1,250/player</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- bet365 -->
+                                <div onclick="openModal('fin_bet365')" class="cursor-pointer group">
+                                    <div class="flex justify-between text-sm mb-2">
+                                        <span class="font-bold text-white text-base flex items-center group-hover:text-blue-400 transition-colors">
+                                            bet365 
+                                            <span class="text-slate-500 font-normal text-xs ml-3 bg-slate-900 border border-slate-700 px-2 py-1 rounded hidden sm:inline">6-Mo Cohort Projection</span>
+                                        </span>
+                                        <span class="text-emerald-400 font-semibold bg-emerald-500/10 px-2 py-1 rounded border border-emerald-500/20 text-xs">+20% NGR Growth</span>
+                                    </div>
+                                    <div class="flex h-8 w-full bg-slate-900 rounded-lg overflow-hidden border border-slate-700/50 group-hover:border-blue-500/50 transition-colors">
+                                        <div class="bg-blue-600/80 w-[20%] flex items-center justify-center text-[10px] font-bold text-white border-r border-slate-900">Acq Cost</div>
+                                        <div class="bg-slate-600 w-[15%] flex items-center justify-center text-[10px] font-bold text-white border-r border-slate-900">Breakeven</div>
+                                        <div class="bg-gradient-to-r from-emerald-500 to-emerald-400 w-[65%] flex items-center justify-center text-[10px] font-bold text-slate-900">Highly Compounding Profit</div>
+                                    </div>
+                                    <div class="flex justify-between text-xs font-medium text-slate-500 mt-1 px-1">
+                                        <span>Month 1</span>
+                                        <span>Month 2</span>
+                                        <span class="text-emerald-400/80">Est LTV: $1,800/player</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Caesars -->
+                                <div onclick="openModal('fin_caesars')" class="cursor-pointer group">
+                                    <div class="flex justify-between text-sm mb-2">
+                                        <span class="font-bold text-white text-base flex items-center group-hover:text-blue-400 transition-colors">
+                                            Caesars Sportsbook
+                                            <span class="text-slate-500 font-normal text-xs ml-3 bg-slate-900 border border-slate-700 px-2 py-1 rounded hidden sm:inline">6-Mo Cohort Projection</span>
+                                        </span>
+                                        <span class="text-emerald-400 font-semibold bg-emerald-500/10 px-2 py-1 rounded border border-emerald-500/20 text-xs">+8% NGR Growth</span>
+                                    </div>
+                                    <div class="flex h-8 w-full bg-slate-900 rounded-lg overflow-hidden border border-slate-700/50 group-hover:border-blue-500/50 transition-colors">
+                                        <div class="bg-blue-600/80 w-[45%] flex items-center justify-center text-[10px] font-bold text-white border-r border-slate-900">Acquisition Cost</div>
+                                        <div class="bg-slate-600 w-[25%] flex items-center justify-center text-[10px] font-bold text-white border-r border-slate-900">Breakeven</div>
+                                        <div class="bg-gradient-to-r from-emerald-500 to-emerald-400 w-[30%] flex items-center justify-center text-[10px] font-bold text-slate-900">Compounding Profit</div>
+                                    </div>
+                                    <div class="flex justify-between text-xs font-medium text-slate-500 mt-1 px-1">
+                                        <span>Month 1</span>
+                                        <span>Month 5</span>
+                                        <span class="text-emerald-400/80">Est LTV: $950/player</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- BetRivers -->
+                                <div onclick="openModal('fin_betrivers')" class="cursor-pointer group">
+                                    <div class="flex justify-between text-sm mb-2">
+                                        <span class="font-bold text-white text-base flex items-center group-hover:text-blue-400 transition-colors">
+                                            BetRivers
+                                            <span class="text-slate-500 font-normal text-xs ml-3 bg-slate-900 border border-slate-700 px-2 py-1 rounded hidden sm:inline">6-Mo Cohort Projection</span>
+                                        </span>
+                                        <span class="text-emerald-400 font-semibold bg-emerald-500/10 px-2 py-1 rounded border border-emerald-500/20 text-xs">+10% NGR Growth</span>
+                                    </div>
+                                    <div class="flex h-8 w-full bg-slate-900 rounded-lg overflow-hidden border border-slate-700/50 group-hover:border-blue-500/50 transition-colors">
+                                        <div class="bg-blue-600/80 w-[35%] flex items-center justify-center text-[10px] font-bold text-white border-r border-slate-900">Acquisition Cost</div>
+                                        <div class="bg-slate-600 w-[20%] flex items-center justify-center text-[10px] font-bold text-white border-r border-slate-900">Breakeven</div>
+                                        <div class="bg-gradient-to-r from-emerald-500 to-emerald-400 w-[45%] flex items-center justify-center text-[10px] font-bold text-slate-900">Compounding Profit</div>
+                                    </div>
+                                    <div class="flex justify-between text-xs font-medium text-slate-500 mt-1 px-1">
+                                        <span>Month 1</span>
+                                        <span>Month 3</span>
+                                        <span class="text-emerald-400/80">Est LTV: $1,150/player</span>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ============================== -->
+                <!-- MODULE 4: COMPLIANCE MOAT      -->
+                <!-- ============================== -->
+                <div id="compliance-module" class="module-content hidden fade-in space-y-6">
+                    <div class="flex justify-between items-end mb-6">
+                        <div>
+                            <h2 class="text-2xl font-bold text-white">Regulatory Compliance Moat</h2>
+                            <p class="text-slate-400 text-sm mt-1">Zero-tolerance operational diagnostics and multi-state legal workflows.</p>
+                        </div>
+                        <button onclick="openModal('comp_audit')" class="px-4 py-2 bg-slate-800 text-white text-sm rounded-lg border border-slate-700 hover:bg-slate-700 transition-colors font-medium">Generate Audit Log</button>
+                    </div>
+
+                    <!-- 1. State Licensing Table -->
+                    <div class="bg-slate-800/40 border border-slate-700/50 rounded-xl shadow-lg overflow-hidden">
+                        <div class="px-6 py-4 border-b border-slate-700/50 flex justify-between items-center bg-slate-900/50">
+                            <h3 class="font-bold text-white">State-by-State Licensing Matrix</h3>
+                            <span class="px-2 py-1 bg-emerald-500/20 text-emerald-400 text-xs rounded border border-emerald-500/30">13 Active Licenses</span>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm">
+                                <thead class="text-xs text-slate-400 uppercase bg-slate-950/50">
+                                    <tr>
+                                        <th class="px-6 py-3 font-semibold">Jurisdiction</th>
+                                        <th class="px-6 py-3 font-semibold">License Type</th>
+                                        <th class="px-6 py-3 font-semibold">Key Operator Partner</th>
+                                        <th class="px-6 py-3 font-semibold">Expiration</th>
+                                        <th class="px-6 py-3 font-semibold text-right">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-700/50">
+                                    <tr class="hover:bg-slate-900/50 transition-colors">
+                                        <td class="px-6 py-4 font-bold text-white">New Jersey (NJ)</td>
+                                        <td class="px-6 py-4 text-slate-400">Vendor Minor</td>
+                                        <td class="px-6 py-4 text-white">BetMGM</td>
+                                        <td class="px-6 py-4 text-slate-400">2027-12-31</td>
+                                        <td class="px-6 py-4 text-right"><span class="px-2 py-1 bg-emerald-500/10 text-emerald-400 rounded text-xs font-semibold">Active</span></td>
+                                    </tr>
+                                    <tr class="hover:bg-slate-900/50 transition-colors">
+                                        <td class="px-6 py-4 font-bold text-white">Pennsylvania (PA)</td>
+                                        <td class="px-6 py-4 text-slate-400">Gaming Service Provider</td>
+                                        <td class="px-6 py-4 text-white">DraftKings</td>
+                                        <td class="px-6 py-4 text-slate-400">2026-06-30</td>
+                                        <td class="px-6 py-4 text-right"><span class="px-2 py-1 bg-emerald-500/10 text-emerald-400 rounded text-xs font-semibold">Active</span></td>
+                                    </tr>
+                                    <tr class="hover:bg-slate-900/50 transition-colors bg-amber-500/5">
+                                        <td class="px-6 py-4 font-bold text-white">Ohio (OH)</td>
+                                        <td class="px-6 py-4 text-slate-400">Affiliate Supplier</td>
+                                        <td class="px-6 py-4 text-white">FanDuel</td>
+                                        <td class="px-6 py-4 text-amber-400 font-medium">2026-03-15</td>
+                                        <td class="px-6 py-4 text-right"><span class="px-2 py-1 bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded text-xs font-semibold">Renewal Pending</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- 2. Creative Approval Workflow -->
+                        <div class="bg-slate-800/40 border border-slate-700/50 rounded-xl shadow-lg flex flex-col">
+                            <div class="px-6 py-4 border-b border-slate-700/50 bg-slate-900/50">
+                                <h3 class="font-bold text-white">Creative Approval Workflow</h3>
+                            </div>
+                            <div class="p-4 flex-1 space-y-3">
+                                <div onclick="openModal('asset_nj')" class="flex items-center justify-between p-3 rounded border border-slate-700/50 bg-slate-900 hover:border-blue-500/50 cursor-pointer transition-colors">
+                                    <div class="flex items-center">
+                                        <i data-lucide="image" class="w-8 h-8 text-slate-500 mr-3"></i>
+                                        <div>
+                                            <p class="text-sm font-semibold text-white">Banner_NFL_Promo_NJ.jpg</p>
+                                            <p class="text-xs text-slate-400">Submitted: Oct 12 • Jurisdiction: NJ</p>
+                                        </div>
+                                    </div>
+                                    <span class="text-xs font-bold text-emerald-400"><i data-lucide="check" class="w-4 h-4 inline"></i> Approved</span>
+                                </div>
+                                <div onclick="openModal('asset_mi')" class="flex items-center justify-between p-3 rounded border border-slate-700/50 bg-slate-900 hover:border-blue-500/50 cursor-pointer transition-colors">
+                                    <div class="flex items-center">
+                                        <i data-lucide="video" class="w-8 h-8 text-slate-500 mr-3"></i>
+                                        <div>
+                                            <p class="text-sm font-semibold text-white">Video_Casino_Bonus_MI.mp4</p>
+                                            <p class="text-xs text-slate-400">Submitted: Oct 14 • Jurisdiction: MI</p>
+                                        </div>
+                                    </div>
+                                    <span class="text-xs font-bold text-amber-400"><i data-lucide="clock" class="w-4 h-4 inline mr-1"></i>Pending Regulator</span>
+                                </div>
+                                <div onclick="openModal('asset_oh')" class="flex items-center justify-between p-3 rounded border border-red-500/30 bg-red-900/10 hover:border-red-500 cursor-pointer transition-colors">
+                                    <div class="flex items-center">
+                                        <i data-lucide="file-text" class="w-8 h-8 text-red-400 mr-3"></i>
+                                        <div>
+                                            <p class="text-sm font-semibold text-white">Text_DraftKings_Promo.txt</p>
+                                            <p class="text-xs text-red-400">Rejected: Missing RG Hotline Format</p>
+                                        </div>
+                                    </div>
+                                    <button class="px-3 py-1 bg-red-600 text-white text-xs rounded font-bold hover:bg-red-500 transition-colors">Edit Asset</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 3. Geo-Fencing Diagnostics -->
+                        <div class="bg-slate-800/40 border border-slate-700/50 rounded-xl shadow-lg flex flex-col">
+                            <div class="px-6 py-4 border-b border-slate-700/50 bg-slate-900/50">
+                                <h3 class="font-bold text-white flex items-center">Geo-Fencing Diagnostics <i data-lucide="activity" class="w-4 h-4 ml-2 text-slate-500"></i></h3>
+                            </div>
+                            <div class="p-4 flex-1">
+                                <div class="space-y-4">
+                                    <div>
+                                        <div class="flex justify-between text-sm mb-1">
+                                            <span class="text-white font-medium">NJ / NY Border Node</span>
+                                            <span class="text-emerald-400 font-bold">Healthy (0.02% Error Rate)</span>
+                                        </div>
+                                        <div class="w-full bg-slate-900 rounded-full h-2 border border-slate-700/50">
+                                            <div class="bg-emerald-400 h-1.5 rounded-full" style="width: 2%"></div>
+                                        </div>
+                                        <p class="text-xs text-slate-500 mt-1">14,200 Ping Checks / Last 1hr</p>
+                                    </div>
+                                    
+                                    <div class="pt-2">
+                                        <div class="flex justify-between text-sm mb-1">
+                                            <span class="text-white font-medium">PA / OH Border Node</span>
+                                            <span class="text-red-400 font-bold">Warning (1.15% Error Rate)</span>
+                                        </div>
+                                        <div class="w-full bg-slate-900 rounded-full h-2 border border-red-500/30">
+                                            <div class="bg-red-500 h-1.5 rounded-full" style="width: 15%"></div>
+                                        </div>
+                                        <p class="text-xs text-red-400 mt-1">8,500 Ping Checks / Auto-pausing localized ad sets.</p>
+                                    </div>
+                                    
+                                    <div class="mt-4 p-3 bg-slate-900 border border-slate-700/50 rounded text-sm text-slate-400 flex items-start">
+                                        <i data-lucide="info" class="w-4 h-4 text-blue-400 mr-2 mt-0.5 shrink-0"></i>
+                                        System utilizes dual IP/Device Location API logic. Failsafes automatically disable MediaCruiser deployments upon API timeout.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- ============================== -->
+                <!-- MODULE 5: ACQUISITION (MOCK)   -->
+                <!-- ============================== -->
+                <div id="acquisition-module" class="module-content hidden fade-in flex flex-col items-center justify-center h-64 border border-dashed border-slate-700 rounded-xl bg-slate-800/20">
+                    <i data-lucide="trending-up" class="w-12 h-12 text-slate-500 mb-4 opacity-50"></i>
+                    <h2 class="text-xl font-bold text-white mb-2">MediaCruiser Acquisition Sandbox</h2>
+                    <p class="text-slate-400 text-sm text-center max-w-md">Detailed campaign creation, ad-set bidding, and A/B testing interfaces are currently syncing with live APIs.</p>
+                    <button onclick="showToast('Syncing API connections...')" class="mt-4 px-4 py-2 bg-blue-600/20 text-blue-400 rounded-lg text-sm font-semibold hover:bg-blue-600/30 transition-colors">Force Sync Data</button>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- Global Modal Overlay -->
+    <div id="modal-backdrop" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] hidden opacity-0 flex items-center justify-center p-4">
+        <div id="modal-panel" class="bg-slate-800 border border-slate-700/50 rounded-xl shadow-2xl w-full max-w-lg transform scale-95 opacity-0 overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="px-6 py-4 border-b border-slate-700/50 bg-slate-950 flex justify-between items-center shrink-0">
+                <h3 id="modal-title" class="font-bold text-lg text-white">Data Drilldown</h3>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-white transition-colors">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div id="modal-content" class="p-6 overflow-y-auto text-slate-200 text-sm bg-slate-900">
+                <!-- Content injected via JS -->
+            </div>
+            <div class="px-6 py-4 border-t border-slate-700/50 bg-slate-950 flex justify-end shrink-0">
+                <button onclick="closeModal()" class="px-4 py-2 bg-slate-800 text-white rounded hover:bg-blue-600 transition-colors font-medium text-sm">Close Window</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-3 pointer-events-none"></div>
+
+    <!-- Interactive Logic Script -->
+    <script>
+        // Initialize Lucide Icons
+        lucide.createIcons();
+
+        // --- Data Definitions for Modals ---
+        const modalData = {
+            'kpi_cac': {
+                title: 'Blended CAC Drilldown',
+                content: `
+                    <div class="space-y-3">
+                        <p class="text-slate-400 mb-4">Breakdown of Customer Acquisition Cost by Media Platform for the current period.</p>
+                        <div class="flex justify-between items-center p-3 bg-slate-800/50 rounded border border-slate-700">
+                            <span class="font-medium">MediaCruiser (Proprietary Search)</span>
+                            <span class="font-bold text-emerald-400">$185.00</span>
+                        </div>
+                        <div class="flex justify-between items-center p-3 bg-slate-800/50 rounded border border-slate-700">
+                            <span class="font-medium">Programmatic Display Network</span>
+                            <span class="font-bold text-amber-400">$290.50</span>
+                        </div>
+                        <div class="flex justify-between items-center p-3 bg-slate-800/50 rounded border border-slate-700 border-l-4 border-l-red-500">
+                            <span class="font-medium">Social (Facebook/IG)</span>
+                            <span class="font-bold text-red-400">$315.20</span>
+                        </div>
+                        <p class="text-xs text-slate-400 mt-2 mt-4"><i data-lucide="alert-circle" class="w-3 h-3 inline mr-1 text-red-400"></i>Social channels are currently exceeding the $250 target blended CAC.</p>
+                    </div>`
+            },
+            'kpi_ftd': {
+                title: 'FTD Sourcing',
+                content: `
+                    <p class="text-slate-400 mb-4">Top converting states by First Time Depositors (FTDs) this month.</p>
+                    <table class="w-full text-left">
+                        <thead class="text-xs uppercase text-slate-400 border-b border-slate-700">
+                            <tr><th class="pb-2">State</th><th class="pb-2">FTD Count</th><th class="pb-2 text-right">Trend</th></tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-700/50">
+                            <tr><td class="py-2 font-bold">New Jersey</td><td class="py-2">1,245</td><td class="py-2 text-right text-emerald-400">+12%</td></tr>
+                            <tr><td class="py-2 font-bold">Pennsylvania</td><td class="py-2">980</td><td class="py-2 text-right text-emerald-400">+5%</td></tr>
+                            <tr><td class="py-2 font-bold">Michigan</td><td class="py-2">850</td><td class="py-2 text-right text-amber-400">-2%</td></tr>
+                        </tbody>
+                    </table>`
+            },
+            'camp_betmgm': {
+                title: 'Campaign Settings: BetMGM NFL Kickoff',
+                content: `
+                    <div class="space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="p-3 bg-slate-800/50 border border-slate-700 rounded"><p class="text-xs text-slate-400">Daily Budget</p><p class="font-bold text-lg">$2,500</p></div>
+                            <div class="p-3 bg-slate-800/50 border border-slate-700 rounded"><p class="text-xs text-slate-400">CPA Baseline</p><p class="font-bold text-lg">$350</p></div>
+                        </div>
+                        <div>
+                            <p class="font-semibold mb-2">Active Ad Sets</p>
+                            <ul class="list-disc pl-5 text-slate-400 space-y-1">
+                                <li>Search: "NFL Betting NJ" (High Performing)</li>
+                                <li>Display: Retargeting Lookalikes</li>
+                            </ul>
+                        </div>
+                    </div>`
+            },
+            'camp_draftkings': {
+                title: 'Campaign Settings: DraftKings NBA',
+                content: `<p class="text-slate-400 mb-4">DraftKings API connection is stable. Current ROAS pacing is exceeding target by 15%.</p><button class="w-full py-2 bg-blue-600 rounded text-white font-bold hover:bg-blue-500 transition-colors">Increase Daily Budget</button>`
+            },
+            'camp_caesars': {
+                title: 'Diagnostics: Caesars March Madness',
+                content: `<div class="bg-amber-500/10 border border-amber-500/30 p-4 rounded text-amber-400 mb-4"><strong>Notice:</strong> Minor Geo-Bleed detected towards CT and NJ. Current error rate is within acceptable parameters (0.04%). CAC is slightly above the $300 target.</div>`
+            },
+            'camp_fanduel': {
+                title: 'Diagnostics: FanDuel High CAC',
+                content: `<div class="bg-red-500/10 border border-red-500 p-4 rounded text-red-400 mb-4"><strong>Warning:</strong> Clicks are registering, but conversion to registration has dropped 40% in the last 48 hours. Recommend pausing Display ad-sets immediately.</div>`
+            },
+            'camp_bet365': {
+                title: 'Campaign Settings: bet365 Global Soccer',
+                content: `<p class="text-slate-400 mb-4">Exceptional performance noted on LiveScore app in-stream inventory. CAC is tracking significantly below the $200 target.</p><button class="w-full py-2 bg-emerald-600 rounded text-white font-bold hover:bg-emerald-500 transition-colors">Duplicate to NY Market</button>`
+            },
+            'fin_revsplit': {
+                title: '12-Month Revenue Shift',
+                content: `<p class="text-slate-400 mb-4">Historical progression of our strategic shift from CPA to Rev-Share.</p>
+                <div class="space-y-2">
+                    <div class="flex justify-between text-xs"><span class="w-16">Q1</span><div class="flex-1 bg-slate-800 mx-2 rounded flex"><div class="bg-slate-500 w-[80%] rounded-l"></div><div class="bg-emerald-400 w-[20%] rounded-r"></div></div><span>20%</span></div>
+                    <div class="flex justify-between text-xs"><span class="w-16">Q2</span><div class="flex-1 bg-slate-800 mx-2 rounded flex"><div class="bg-slate-500 w-[70%] rounded-l"></div><div class="bg-emerald-400 w-[30%] rounded-r"></div></div><span>30%</span></div>
+                    <div class="flex justify-between text-xs"><span class="w-16">Q3</span><div class="flex-1 bg-slate-800 mx-2 rounded flex"><div class="bg-slate-500 w-[62%] rounded-l"></div><div class="bg-emerald-400 w-[38%] rounded-r"></div></div><span>38%</span></div>
+                    <div class="flex justify-between text-xs"><span class="w-16">Current</span><div class="flex-1 bg-slate-800 mx-2 rounded flex"><div class="bg-slate-500 w-[58%] rounded-l"></div><div class="bg-emerald-400 w-[42%] rounded-r"></div></div><span class="text-emerald-400 font-bold">42%</span></div>
+                </div>`
+            },
+            'fin_betmgm': {
+                title: 'BetMGM Retention Analysis',
+                content: `<p class="text-slate-400 mb-4">Month 3 retention has spiked due to targeted email flows provided by SCCG Management parameters.</p><p class="text-lg font-bold text-emerald-400">Projected 12-Mo LTV: $2,100 per user</p>`
+            },
+            'fin_dk': {
+                title: 'DraftKings Retention Analysis',
+                content: `<p class="text-slate-400 mb-4">Standard churn rates observed. Expected breakeven at day 45 post-acquisition.</p>`
+            },
+            'fin_fanduel': {
+                title: 'FanDuel Retention Analysis',
+                content: `<p class="text-slate-400 mb-4">Strong retention in mid-tier markets. NGR is trending positively after optimizing initial offer structures.</p><p class="text-lg font-bold text-emerald-400">Projected 12-Mo LTV: $1,650 per user</p>`
+            },
+            'fin_bet365': {
+                title: 'bet365 Retention Analysis',
+                content: `<p class="text-slate-400 mb-4">Industry-leading retention rates due to superior in-play product. Revenue share compounding is highly accelerated.</p><p class="text-lg font-bold text-emerald-400">Projected 12-Mo LTV: $2,800 per user</p>`
+            },
+            'fin_caesars': {
+                title: 'Caesars Retention Analysis',
+                content: `<p class="text-slate-400 mb-4">VIP tier shows excellent long-term value, though initial acquisition costs remain high. Focus is shifting to lower-tier retention strategies.</p><p class="text-lg font-bold text-emerald-400">Projected 12-Mo LTV: $1,400 per user</p>`
+            },
+            'fin_betrivers': {
+                title: 'BetRivers Retention Analysis',
+                content: `<p class="text-slate-400 mb-4">Steady performance in localized markets (PA, IL). Bonus hunting has decreased, improving overall LTV.</p><p class="text-lg font-bold text-emerald-400">Projected 12-Mo LTV: $1,550 per user</p>`
+            },
+            'comp_audit': {
+                title: 'Generate Official Audit Log',
+                content: `<p class="text-slate-400 mb-4">Are you sure you want to generate a signed PDF export of all regulatory actions for the past 30 days? This action is logged.</p><button class="w-full py-2 bg-blue-600 rounded text-white font-bold hover:bg-blue-500 transition-colors" onclick="showToast('Audit log compiling...'); closeModal();">Confirm & Generate</button>`
+            },
+            'asset_nj': {
+                title: 'Asset Detail: Banner_NFL_Promo_NJ.jpg',
+                content: `<div class="bg-slate-800 p-2 rounded mb-4 flex items-center justify-center border border-slate-700 h-32"><span class="text-slate-500 font-bold">MOCK BANNER AD</span></div><p class="text-sm font-bold text-emerald-400 mb-2">Status: Approved by DGE on Oct 13</p><p class="text-xs text-slate-400">Notes: Includes mandatory 1-800-GAMBLER text at >= 10% total asset height.</p>`
+            },
+            'asset_mi': {
+                title: 'Asset Detail: Video_Casino_Bonus_MI.mp4',
+                content: `<div class="aspect-video bg-slate-800 rounded mb-4 flex items-center justify-center border border-slate-700"><i data-lucide="play-circle" class="w-12 h-12 text-slate-500"></i></div><p class="text-sm font-bold text-amber-400 mb-2">Status: Awaiting MGCB Review</p>`
+            },
+            'asset_oh': {
+                title: 'Asset Detail: Text_DraftKings_Promo.txt',
+                content: `<div class="bg-slate-800 border border-red-500/50 p-3 rounded text-slate-400 font-mono text-xs mb-4">"Bet $5 get $200 instantly. Terms apply. Must be 21+."</div><p class="text-sm font-bold text-red-400 mb-2">Status: Rejected</p><p class="text-xs text-slate-400">Reason: Ohio strictly requires specific responsible gaming phone numbers inline with copy. Please revise and resubmit.</p>`
+            },
+            'team_directory': {
+                title: 'SCCG Partner Directory',
+                content: `
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between p-3 border border-slate-700 rounded bg-slate-800/50">
+                            <div class="flex items-center"><div class="w-8 h-8 rounded-full bg-slate-600 mr-3"></div><div><p class="text-sm font-bold">Stephen Crystal</p><p class="text-xs text-slate-400">SCCG CEO</p></div></div>
+                            <button class="px-2 py-1 bg-slate-700 border border-slate-600 rounded text-xs hover:bg-slate-600 transition-colors">Message</button>
+                        </div>
+                        <div class="flex items-center justify-between p-3 border border-slate-700 rounded bg-slate-800/50">
+                            <div class="flex items-center"><div class="w-8 h-8 rounded-full bg-blue-600 mr-3"></div><div><p class="text-sm font-bold">MT Media Team</p><p class="text-xs text-slate-400">Internal Group</p></div></div>
+                            <button class="px-2 py-1 bg-slate-700 border border-slate-600 rounded text-xs hover:bg-slate-600 transition-colors">Message</button>
+                        </div>
+                    </div>`
+            },
+            'alert_geo': {
+                title: 'Critical: Geo-Fence Incident',
+                content: `<p class="text-slate-400 mb-4">Logs indicate 3 clicks originated from New York IPs but were routed to New Jersey operator landing pages. Campaigns have been automatically suspended.</p><button onclick="showToast('Re-initiating IP validation...'); closeModal();" class="w-full py-2 bg-red-600 rounded text-white font-bold hover:bg-red-500 transition-colors">Acknowledge & Force IP Sync</button>`
+            },
+            'alert_creative': {
+                title: 'Notice: Ohio Creative Update',
+                content: `<p class="text-slate-400 mb-4">Ohio Casino Control Commission requires updated formatting for the problem gambling helpline in all digital assets by end of month.</p><button onclick="switchTab('compliance'); closeModal();" class="w-full py-2 bg-blue-600 rounded text-white font-bold hover:bg-blue-500 transition-colors">Go to Workflow Tool</button>`
+            }
+        };
+
+        // Modal Logic
+        const modalBackdrop = document.getElementById('modal-backdrop');
+        const modalPanel = document.getElementById('modal-panel');
+        
+        function openModal(dataKey) {
+            const data = modalData[dataKey];
+            if (!data) return;
+
+            document.getElementById('modal-title').innerText = data.title;
+            document.getElementById('modal-content').innerHTML = data.content;
+            lucide.createIcons(); // re-render icons inside modal
+
+            modalBackdrop.classList.remove('hidden');
+            // Slight delay for CSS transition to trigger
+            requestAnimationFrame(() => {
+                modalBackdrop.classList.remove('opacity-0');
+                modalPanel.classList.remove('scale-95', 'opacity-0');
+                modalPanel.classList.add('scale-100', 'opacity-100');
+            });
+        }
+
+        function closeModal() {
+            modalBackdrop.classList.add('opacity-0');
+            modalPanel.classList.remove('scale-100', 'opacity-100');
+            modalPanel.classList.add('scale-95', 'opacity-0');
+            
+            setTimeout(() => {
+                modalBackdrop.classList.add('hidden');
+            }, 300); // match css transition duration
+        }
+
+        // Close modal on backdrop click
+        modalBackdrop.addEventListener('click', (e) => {
+            if (e.target === modalBackdrop) closeModal();
+        });
+
+        // --- Existing UI Logic ---
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.module-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(tabId + '-module').classList.remove('hidden');
+
+            document.querySelectorAll('.sidebar-item').forEach(el => {
+                el.classList.remove('bg-blue-600/20', 'text-blue-400', 'shadow-[0_0_15px_rgba(37,99,235,0.15)]', 'border-blue-500/30');
+                el.classList.add('text-slate-400', 'border-transparent');
+                const icon = el.querySelector('.icon');
+                if (icon) {
+                    icon.classList.remove('text-blue-400');
+                    icon.classList.add('text-slate-500');
+                }
+            });
+
+            const activeBtn = document.getElementById('btn-' + tabId);
+            if (activeBtn) {
+                activeBtn.classList.remove('text-slate-400', 'border-transparent');
+                activeBtn.classList.add('bg-blue-600/20', 'text-blue-400', 'shadow-[0_0_15px_rgba(37,99,235,0.15)]', 'border-blue-500/30');
+                const activeIcon = activeBtn.querySelector('.icon');
+                if (activeIcon) {
+                    activeIcon.classList.remove('text-slate-500');
+                    activeIcon.classList.add('text-blue-400');
+                }
+            }
+
+            if(window.innerWidth < 768) toggleMobileMenu();
+        }
+
+        function toggleMobileMenu() {
+            const sidebar = document.querySelector('aside');
+            if (sidebar.classList.contains('hidden')) {
+                sidebar.classList.remove('hidden');
+                sidebar.classList.add('absolute', 'h-full', 'z-50');
+            } else {
+                sidebar.classList.add('hidden');
+                sidebar.classList.remove('absolute', 'h-full', 'z-50');
+            }
+        }
+
+        function toggleDropdown(menuId) {
+            const allMenus = document.querySelectorAll('.dropdown-menu');
+            allMenus.forEach(menu => { if(menu.id !== menuId) menu.classList.add('hidden'); });
+            const menu = document.getElementById(menuId);
+            menu.classList.toggle('hidden');
+            event.stopPropagation();
+        }
+
+        document.addEventListener('click', function(event) {
+            const dropdowns = document.querySelectorAll('.dropdown-menu');
+            dropdowns.forEach(menu => {
+                if (!menu.classList.contains('hidden')) menu.classList.add('hidden');
+            });
+        });
+
+        function selectFilter(type, text) {
+            document.getElementById(`${type}-selected`).innerText = text;
+            showToast(`Filter applied: ${text}`);
+            closeAllDropdowns();
+        }
+
+        function closeAllDropdowns() {
+            document.querySelectorAll('.dropdown-menu').forEach(menu => menu.classList.add('hidden'));
+        }
+
+        function showToast(message) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'bg-slate-800 border border-slate-700 text-white px-4 py-3 rounded-lg shadow-xl flex items-center toast-enter pointer-events-auto';
+            toast.innerHTML = `<i data-lucide="info" class="w-4 h-4 text-blue-400 mr-3"></i><span class="text-sm font-medium">${message}</span>`;
+            container.appendChild(toast);
+            lucide.createIcons();
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(100%)';
+                toast.style.transition = 'all 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        function filterCampaigns(query) {
+            // Filter Pulse List
+            const pulseItems = document.querySelectorAll('#pulse-list .pulse-item');
+            const q = query.toLowerCase();
+            pulseItems.forEach(item => {
+                if(item.innerText.toLowerCase().includes(q)) {
+                    item.style.display = 'flex';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+
+            // Filter Active Campaigns List
+            const tableItems = document.querySelectorAll('#campaign-list .campaign-item');
+            tableItems.forEach(item => {
+                if(item.innerText.toLowerCase().includes(q)) {
+                    item.style.display = '';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        function copyToClipboard() {
+            const tempInput = document.createElement('input');
+            tempInput.value = window.location.href;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+            showToast('Dashboard link copied to clipboard!');
+        }
+    </script>
+</body>
+</html>
